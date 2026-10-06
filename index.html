@@ -1,0 +1,401 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff2d55">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Trading Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--red:#ff2d55;--bd:rgba(255,255,255,.1);--mut:rgba(255,255,255,.58);--card:rgba(255,255,255,.035);--pos:#34d399;--neg:#ff4d6d}
+*{box-sizing:border-box}
+body{margin:0;font-family:Sora,system-ui,sans-serif;color:#fff;background:radial-gradient(900px 500px at 0 0,rgba(255,45,85,.16),transparent),#0d0709;min-height:100vh;font-size:14px}
+.app{display:flex;min-height:100vh}
+.side{width:190px;flex:none;border-right:1px solid var(--bd);padding:14px 10px;position:sticky;top:0;height:100vh;transition:width .2s;display:flex;flex-direction:column;gap:4px}
+.side.min{width:64px}
+.logo{font-weight:700;font-size:16px;padding:6px 10px 14px;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden}
+.logo i{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 12px var(--red);flex:none}
+.nav{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;border:0;background:none;color:var(--mut);font:inherit;cursor:pointer;white-space:nowrap;overflow:hidden;text-align:left}
+.nav:hover{color:#fff;background:var(--card)}
+.nav.on{color:#fff;background:rgba(255,45,85,.14);box-shadow:inset 3px 0 var(--red)}
+.nav svg{flex:none}
+main{flex:1;min-width:0;padding:26px 30px 60px}
+h1{font-size:22px;margin:0}h2{font-size:15px;margin:0 0 12px}
+.page-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}
+.card{border:1px solid var(--bd);background:var(--card);border-radius:12px;padding:16px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px}
+.stat small{color:var(--mut);display:block;margin-bottom:6px}.stat b{font-size:20px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.btn{background:#fff;color:#000;border:0;border-radius:8px;padding:9px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn:hover{background:#ffe3e8}
+.ghost{background:none;color:#fff;border:1px solid var(--bd);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
+.ghost:hover{border-color:rgba(255,255,255,.4)}
+.icon{background:none;border:1px solid var(--bd);color:#fff;border-radius:8px;padding:6px;cursor:pointer;display:inline-flex}
+.icon:hover{border-color:var(--red)}
+.tag{padding:2px 9px;border-radius:99px;font-size:12px;border:1px solid var(--bd);color:var(--mut)}
+.tag.Win{color:var(--pos);border-color:var(--pos);background:rgba(52,211,153,.1)}
+.tag.Loss{color:var(--neg);border-color:var(--neg);background:rgba(255,77,109,.1)}
+.row{display:flex;align-items:center;gap:14px;cursor:pointer;flex-wrap:wrap}.row .sp{flex:1}
+.item{margin-bottom:10px}
+.detail{margin-top:14px;padding-top:14px;border-top:1px solid var(--bd);display:grid;gap:10px}
+.detail b{color:var(--mut);font-weight:500;font-size:12px}.detail p{margin:3px 0 0;white-space:pre-wrap}
+.thumb{max-width:260px;max-height:170px;border-radius:8px;border:1px solid var(--bd);cursor:zoom-in;display:block;margin-top:4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--bd);background:none;color:var(--mut);border-radius:99px;padding:6px 14px;font:inherit;cursor:pointer}
+.chip.on{background:#fff;color:#000;border-color:#fff}
+input,select,textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:8px;color:#fff;padding:9px 11px;font:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red)}
+select option{background:#1a0b10}
+input[type=checkbox]{width:auto}
+label>span,.lbl{display:block;color:var(--mut);font-size:12px;margin-bottom:5px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}
+.panel{position:fixed;top:0;right:0;bottom:0;max-width:100vw;background:#150a0e;border-left:1px solid var(--bd);transform:translateX(100%);visibility:hidden;transition:transform .25s,visibility 0s .25s;z-index:20;display:flex;flex-direction:column}
+.panel.in{transform:none;visibility:visible;transition:transform .25s;box-shadow:-20px 0 60px rgba(0,0,0,.5)}
+.panel header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--bd)}.panel header h2{margin:0}
+.pbody{padding:22px;overflow:auto;flex:1}
+.actions{display:flex;gap:10px;margin-top:22px}
+details{border:1px solid var(--bd);border-radius:8px;padding:10px 12px}summary{cursor:pointer}
+details label{display:flex;gap:8px;align-items:center;margin-top:8px}
+.lb{position:fixed;inset:0;background:#000;z-index:50;display:flex;align-items:center;justify-content:center;cursor:zoom-out}.lb img{max-width:100vw;max-height:100vh}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:500}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{min-height:62px;border:1px solid var(--bd);border-radius:8px;padding:6px;font-size:12px;color:var(--mut)}
+.day.w{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.5)}.day.l{background:rgba(255,77,109,.16);border-color:rgba(255,77,109,.5)}
+.day b{display:block;margin-top:6px;font-size:13px}
+.bar{height:8px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:#fff}
+.empty{color:var(--mut);text-align:center;padding:40px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.two,.grid{grid-template-columns:1fr}main{padding:18px}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+</head><body><div id="root"></div>
+<script type="text/babel">
+
+const {useState,useEffect,createContext,useContext}=React;
+const mk=g=>({size=16})=><span style={{fontSize:size,lineHeight:1,width:size,display:'inline-block',textAlign:'center'}}>{g}</span>;
+const LayoutDashboard=mk('▦'),Sunrise=mk('☀'),BookOpen=mk('▤'),PenLine=mk('✎'),GraduationCap=mk('★'),Target=mk('◎'),Settings=mk('⚙'),PanelLeft=mk('◧'),Pencil=mk('✎'),Trash2=mk('✕'),X=mk('✕');
+const Tooltip=()=>null,XAxis=()=>null,YAxis=()=>null,Area=()=>null,Pie=()=>null,Cell=()=>null;
+const ResponsiveContainer=({children})=><div style={{width:'100%',height:'100%'}}>{children}</div>;
+function AreaChart({data,children}){
+  const kids=React.Children.toArray(children),a=kids.find(c=>c.type===Area);
+  const W=600,H=220,p=28,vs=data.map(d=>d[a.props.dataKey]),mn=Math.min(0,...vs),mx=Math.max(1,...vs);
+  const x=i=>p+(data.length>1?i*(W-2*p)/(data.length-1):0),y=v=>H-p-((v-mn)/(mx-mn))*(H-2*p);
+  const pts=vs.map((v,i)=>x(i)+','+y(v)).join(' ');
+  return <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:'100%'}}>
+    <line x1={p} x2={W-p} y1={y(0)} y2={y(0)} stroke="#555" strokeDasharray="4"/>
+    <polygon points={`${x(0)},${y(0)} ${pts} ${x(vs.length-1)},${y(0)}`} fill="rgba(255,45,85,.25)"/>
+    <polyline points={pts} fill="none" stroke="#ff2d55" strokeWidth="2"/>
+    <text x={p} y={12} fill="#888" fontSize="11">{mx.toFixed(0)}</text><text x={p} y={H-4} fill="#888" fontSize="11">{mn.toFixed(0)}</text></svg>
+}
+function PieChart({children}){
+  const pie=React.Children.toArray(children).find(c=>c.type===Pie),data=pie.props.data,cols=React.Children.toArray(pie.props.children).map(c=>c.props.fill);
+  const tot=data.reduce((s,d)=>s+d.value,0)||1;let ang=-Math.PI/2;
+  return <svg viewBox="-100 -100 200 200" style={{width:'100%',height:'100%'}}>
+    {tot===1&&!data.some(d=>d.value)&&<circle r="80" fill="none" stroke="#333" strokeWidth="28"/>}
+    {data.map((d,i)=>{if(!d.value)return null;const a=d.value/tot*Math.PI*2,r=80,x1=r*Math.cos(ang),y1=r*Math.sin(ang);ang+=a;const x2=r*Math.cos(ang),y2=r*Math.sin(ang);
+      return d.value===tot?<circle key={i} r={r} fill="none" stroke={cols[i]} strokeWidth="28"/>:<path key={i} d={`M${x1} ${y1}A${r} ${r} 0 ${a>Math.PI?1:0} 1 ${x2} ${y2}`} fill="none" stroke={cols[i]} strokeWidth="28"/>})}
+    {data.map((d,i)=><text key={i} x="-92" y={-88+i*13} fill={cols[i]} fontSize="10">{d.name}: {d.value}</text>)}</svg>
+}
+
+
+const KEY = 'trading-journal-v1'
+const uid = () => Math.random().toString(36).slice(2, 9)
+const today = () => new Date().toISOString().slice(0, 10)
+const N = x => +x || 0
+const money = n => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: 2 })
+const cls = n => (n > 0 ? 'pos' : n < 0 ? 'neg' : '')
+const sum = a => a.reduce((s, x) => s + x, 0)
+const opt = o => (typeof o === 'string' ? { v: o, l: o } : o)
+const DEF = {
+  account: 'My Account',
+  models: ['Model A', 'Model B'],
+  risk: ['Risked ≤ planned amount', 'Stop loss set before entry', 'No revenge trades'],
+  checks: ['Matched HTF bias', 'Waited for confirmation', 'Entered in my session window'],
+  plans: [], trades: [], reflections: [], study: [], goals: [],
+}
+const Zoom = createContext(() => {})
+const readImg = f => new Promise(r => {
+  const fr = new FileReader()
+  fr.onload = () => {
+    const i = new Image()
+    i.onload = () => {
+      const s = Math.min(1, 1400 / i.width), c = document.createElement('canvas')
+      c.width = i.width * s; c.height = i.height * s
+      c.getContext('2d').drawImage(i, 0, 0, c.width, c.height)
+      r(c.toDataURL('image/jpeg', 0.72))
+    }
+    i.src = fr.result
+  }
+  fr.readAsDataURL(f)
+})
+
+function Img({ src }) {
+  const zoom = useContext(Zoom)
+  return src ? <img className="thumb" src={src} onClick={() => zoom(src)} /> : null
+}
+const Panel = ({ open, wide, title, onClose, children }) => (
+  <aside className={'panel ' + (open ? 'in' : '')} style={{ width: wide ? 1000 : 520 }}>
+    <header><h2>{title}</h2><button className="icon" onClick={onClose}><X size={18} /></button></header>
+    <div className="pbody">{children}</div>
+  </aside>
+)
+
+function Form({ fields, init, lists, onSave, onCancel }) {
+  const [v, setV] = useState(init)
+  const set = (k, x) => setV(p => ({ ...p, [k]: x }))
+  const input = f => {
+    const val = v[f.k] ?? ''
+    if (f.t === 'textarea') return <textarea rows={f.rows || 4} value={val} onChange={e => set(f.k, e.target.value)} />
+    if (f.t === 'select') return <select value={val} onChange={e => set(f.k, e.target.value)}>{f.o.map(opt).map(o => <option key={o.v} value={o.v}>{o.l}</option>)}</select>
+    if (f.t === 'image') return <div><input type="file" accept="image/*" onChange={async e => e.target.files[0] && set(f.k, await readImg(e.target.files[0]))} /><Img src={val} />{val && <button className="ghost" style={{ marginTop: 6 }} onClick={() => set(f.k, '')}>Remove image</button>}</div>
+    return <input type={f.t || 'text'} value={val} min={f.min} max={f.max} step={f.step} onChange={e => set(f.k, e.target.value)} />
+  }
+  return <div>
+    <div className="grid">
+      {fields.map(f => f.t === 'check' ? (
+        <details key={f.k} className="full"><summary>{f.l} ({Object.values(v[f.k] || {}).filter(Boolean).length}/{lists[f.list].length})</summary>
+          {lists[f.list].map(c => <label key={c}><input type="checkbox" checked={!!(v[f.k] || {})[c]} onChange={e => set(f.k, { ...v[f.k], [c]: e.target.checked })} />{c}</label>)}
+          {!lists[f.list].length && <p className="lbl">Add criteria in the System tab.</p>}
+        </details>
+      ) : (
+        <label key={f.k} className={['textarea', 'image'].includes(f.t) ? 'full' : ''}><span>{f.l}</span>{input(f)}</label>
+      ))}
+    </div>
+    <div className="actions"><button className="btn" onClick={() => onSave(v)}>Save</button><button className="ghost" onClick={onCancel}>Cancel</button></div>
+  </div>
+}
+
+function Body({ fields, item, skip = [] }) {
+  return <div className="detail">
+    {fields.filter(f => !skip.includes(f.k) && item[f.k] !== '' && item[f.k] != null).map(f => {
+      if (f.t === 'image') return <div key={f.k}><b>{f.l}</b><Img src={item[f.k]} /></div>
+      if (f.t === 'check') return <div key={f.k}><b>{f.l}</b>{Object.entries(item[f.k] || {}).map(([c, ok]) => <p key={c}>{ok ? '✓' : '✗'} {c}</p>)}</div>
+      const o = f.o && f.o.map(opt).find(x => x.v === item[f.k])
+      return <div key={f.k}><b>{f.l}</b><p>{o ? o.l : String(item[f.k])}</p></div>
+    })}
+  </div>
+}
+
+function Section({ title, items, fields, lists, blank, wide, head, body, onSave, onDel, top, filter = () => true, prep = x => x, label = 'New entry' }) {
+  const [edit, setEdit] = useState(blank)
+  const [open, setOpen] = useState(false)
+  const [exp, setExp] = useState({})
+  const [conf, setConf] = useState(null)
+  const shown = items.filter(filter).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.entry || '').localeCompare(a.entry || ''))
+  const start = x => { setEdit(prep(x)); setOpen(true) }
+  return <>
+    <div className="page-h"><h1>{title}</h1><button className="btn" onClick={() => start(blank)}>+ {label}</button></div>
+    {top}
+    {!shown.length && <div className="empty">Nothing here yet. Use “{label}” to add your first entry.</div>}
+    {shown.map(it => <div className="card item" key={it.id}>
+      <div className="row" onClick={() => setExp(e => ({ ...e, [it.id]: !e[it.id] }))}>
+        {head(it)}<span className="sp" />
+        <span onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 6 }}>
+          <button className="icon" title="Edit" onClick={() => start(it)}><Pencil size={15} /></button>
+          {conf === it.id
+            ? <button className="ghost" onClick={() => { onDel(it.id); setConf(null) }}>Confirm delete</button>
+            : <button className="icon" title="Delete" onClick={() => setConf(it.id)}><Trash2 size={15} /></button>}
+        </span>
+      </div>
+      {exp[it.id] && (body ? body(it) : <Body fields={fields} item={it} skip={head.skip} />)}
+    </div>)}
+    <Panel open={open} wide={wide} title={edit.id ? 'Edit ' + label.replace(/^(New|Log) /, '') : label} onClose={() => setOpen(false)}>
+      <Form key={(edit.id || 'new') + open} fields={fields} init={edit} lists={lists} onCancel={() => setOpen(false)} onSave={v => { onSave(v); setOpen(false) }} />
+    </Panel>
+  </>
+}
+
+/* ---------- Dashboard ---------- */
+function calc(tr) {
+  const p = tr.map(t => N(t.pnl)), w = p.filter(x => x > 0), l = p.filter(x => x < 0)
+  const days = {}; tr.forEach(t => (days[t.date] = (days[t.date] || 0) + N(t.pnl)))
+  const dv = Object.values(days)
+  const sorted = [...tr].sort((a, b) => (b.date + b.entry).localeCompare(a.date + a.entry))
+  let streak = 0
+  if (sorted.length) { const r = sorted[0].result; for (const t of sorted) { if (t.result === r) streak++; else break } streak = r === 'BE' ? 0 : streak + (r === 'Win' ? 'W' : 'L') }
+  return {
+    days, net: sum(p), n: tr.length,
+    winPct: tr.length ? (tr.filter(t => t.result === 'Win').length / tr.length) * 100 : 0,
+    dayPct: dv.length ? (dv.filter(x => x > 0).length / dv.length) * 100 : 0,
+    avgW: w.length ? sum(w) / w.length : 0, avgL: l.length ? sum(l) / l.length : 0,
+    pf: l.length ? sum(w) / Math.abs(sum(l)) : w.length ? Infinity : 0,
+    best: p.length ? Math.max(...p) : 0, streak: streak || '—', dv, comm: sum(tr.map(t => N(t.comm))),
+  }
+}
+function Dashboard({ db, setDb }) {
+  const s = calc(db.trades)
+  const [m, setM] = useState(new Date())
+  const rr = s.avgL ? s.avgW / Math.abs(s.avgL) : 0
+  const row1 = [['Net P&L', money(s.net), cls(s.net)], ['Trade Win%', s.winPct.toFixed(1) + '%'], ['Daily Win%', s.dayPct.toFixed(1) + '%'], ['Avg R:R', rr.toFixed(2)], ['Profit Factor', s.pf === Infinity ? '∞' : s.pf.toFixed(2)]]
+  const row2 = [['Total Trades', s.n], ['Avg Win', money(s.avgW), 'pos'], ['Avg Loss', money(s.avgL), 'neg'], ['Best Trade', money(s.best), cls(s.best)], ['Current Streak', s.streak]]
+  let run = 0
+  const curve = [{ d: 'Start', v: 0 }, ...[...db.trades].sort((a, b) => (a.date + a.entry).localeCompare(b.date + b.entry)).map(t => ({ d: t.date, v: (run += N(t.pnl)) }))]
+  const y = m.getFullYear(), mo = m.getMonth(), first = new Date(y, mo, 1).getDay(), dim = new Date(y, mo + 1, 0).getDate()
+  const pie = ['Win', 'Loss', 'BE'].map(k => ({ name: k, value: db.trades.filter(t => t.result === k).length }))
+  const models = {}; db.trades.forEach(t => { const k = t.model || 'None'; (models[k] = models[k] || []).push(t) })
+  const stat = ([l, v, c]) => <div className="card stat" key={l}><small>{l}</small><b className={c}>{v}</b></div>
+  const dvs = s.dv
+  return <>
+    <div className="page-h"><h1>Dashboard</h1>
+      <input style={{ width: 220, textAlign: 'right', fontWeight: 600 }} aria-label="Account name" value={db.account} onChange={e => setDb(d => ({ ...d, account: e.target.value }))} /></div>
+    <div className="stats">{row1.map(stat)}</div>
+    <div className="stats">{row2.map(stat)}</div>
+    <div className="card" style={{ height: 300, marginBottom: 12 }}>
+      <h2>Equity curve</h2>
+      <ResponsiveContainer width="100%" height="85%"><AreaChart data={curve}>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#ff2d55" stopOpacity=".5" /><stop offset="100%" stopColor="#ff2d55" stopOpacity="0" /></linearGradient></defs>
+        <XAxis dataKey="d" stroke="#888" fontSize={11} /><YAxis stroke="#888" fontSize={11} />
+        <Tooltip contentStyle={{ background: '#1a0b10', border: '1px solid #333' }} />
+        <Area dataKey="v" stroke="#ff2d55" strokeWidth={2} fill="url(#g)" />
+      </AreaChart></ResponsiveContainer>
+    </div>
+    <div className="card">
+      <div className="page-h" style={{ marginBottom: 12 }}><h2 style={{ margin: 0 }}>{m.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
+        <span style={{ display: 'flex', gap: 8 }}><button className="ghost" onClick={() => setM(new Date(y, mo - 1, 1))}>Prev</button><button className="ghost" onClick={() => setM(new Date(y, mo + 1, 1))}>Next</button></span></div>
+      <div className="cal">
+        {'SMTWTFS'.split('').map((d, i) => <div key={i} className="lbl" style={{ textAlign: 'center' }}>{d}</div>)}
+        {Array(first).fill(0).map((_, i) => <div key={'e' + i} />)}
+        {Array.from({ length: dim }, (_, i) => {
+          const k = `${y}-${String(mo + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`, v = s.days[k]
+          return <div key={k} className={'day ' + (v > 0 ? 'w' : v < 0 ? 'l' : '')}>{i + 1}{v !== undefined && <b className={cls(v)}>{money(v)}</b>}</div>
+        })}
+      </div>
+    </div>
+    <div className="two">
+      <div className="card" style={{ height: 280 }}><h2>Trade breakdown</h2>
+        <ResponsiveContainer width="100%" height="85%"><PieChart>
+          <Pie data={pie} dataKey="value" innerRadius={50} outerRadius={85} stroke="none" label={e => e.value ? e.name : ''}>
+            {pie.map((e, i) => <Cell key={i} fill={['#34d399', '#ff4d6d', '#777'][i]} />)}</Pie>
+          <Tooltip contentStyle={{ background: '#1a0b10', border: '1px solid #333' }} /></PieChart></ResponsiveContainer></div>
+      <div className="card"><h2>Account summary — {db.account}</h2>
+        <table><tbody>{[['Net P&L', money(s.net), cls(s.net)], ['Commissions', money(s.comm)], ['Days traded', dvs.length], ['Best day', money(dvs.length ? Math.max(...dvs) : 0), 'pos'], ['Worst day', money(dvs.length ? Math.min(...dvs) : 0), 'neg']].map(([a, b, c]) => <tr key={a}><td>{a}</td><td className={c}>{b}</td></tr>)}</tbody></table></div>
+    </div>
+    <div className="card" style={{ marginTop: 12 }}><h2>Model performance</h2>
+      <table><thead><tr><th>Model</th><th>Trades</th><th>Win%</th><th>Net P&L</th><th>Avg rating</th></tr></thead><tbody>
+        {Object.entries(models).map(([k, t]) => { const r = t.filter(x => x.rating); return <tr key={k}><td>{k}</td><td>{t.length}</td><td>{((t.filter(x => x.result === 'Win').length / t.length) * 100).toFixed(0)}%</td><td className={cls(sum(t.map(x => N(x.pnl))))}>{money(sum(t.map(x => N(x.pnl))))}</td><td>{r.length ? (sum(r.map(x => N(x.rating))) / r.length).toFixed(1) : '—'}</td></tr> })}
+        {!db.trades.length && <tr><td colSpan="5" className="lbl">Log trades to see model stats.</td></tr>}
+      </tbody></table></div>
+  </>
+}
+
+/* ---------- Tabs built on Section ---------- */
+const textarea = (k, l, rows) => ({ k, l, t: 'textarea', rows })
+function Plans({ db, crud }) {
+  const fields = [{ k: 'date', l: 'Date', t: 'date' }, { k: 'bias', l: 'Bias', t: 'select', o: ['Bullish', 'Bearish', 'Neutral'] }, textarea('events', 'Economic calendar events'), textarea('targets', 'Targets'), textarea('plan', 'Game plan', 6), textarea('notes', 'Additional notes'), { k: 'daily', l: 'Daily chart screenshot', t: 'image' }, { k: 'intra', l: 'Intraday chart screenshot', t: 'image' }]
+  const head = p => <><b>{p.date}</b><span className="tag">{p.bias}</span></>
+  head.skip = ['date', 'bias']
+  return <Section title="Pre-Market Plan" label="New plan" items={db.plans} fields={fields} lists={db} blank={{ date: today(), bias: 'Neutral' }} head={head} {...crud('plans')} />
+}
+function Trades({ db, crud }) {
+  const fields = [
+    { k: 'date', l: 'Date', t: 'date' }, { k: 'entry', l: 'Entry time', t: 'time' }, { k: 'exit', l: 'Exit time', t: 'time' },
+    { k: 'inst', l: 'Instrument', t: 'select', o: ['MNQ', 'MES', 'MYM', 'MGC', 'NQ', 'ES', 'YM', 'GC'] },
+    { k: 'model', l: 'Model', t: 'select', o: ['', ...db.models] }, { k: 'protocol', l: 'Protocol', t: 'select', o: ['LRLRC', 'HRLRC'] },
+    { k: 'ep', l: 'Entry price', t: 'number', step: 'any' }, { k: 'xp', l: 'Exit price', t: 'number', step: 'any' },
+    { k: 'qty', l: 'Contracts', t: 'number' }, { k: 'pnl', l: 'Net P&L', t: 'number', step: 'any' }, { k: 'comm', l: 'Commission', t: 'number', step: 'any' },
+    { k: 'result', l: 'Result', t: 'select', o: ['Win', 'Loss', 'BE'] },
+    { k: 'plan', l: 'Linked pre-market plan', t: 'select', o: [{ v: '', l: 'None' }, ...db.plans.map(p => ({ v: p.id, l: `${p.date} · ${p.bias}` }))] },
+    { k: 'rating', l: 'Performance rating (1-10)', t: 'number', min: 1, max: 10 },
+    { k: 'riskc', l: 'Risk management checklist', t: 'check', list: 'risk' }, { k: 'tradec', l: 'Trade checklist', t: 'check', list: 'checks' },
+    textarea('conf', 'Confluences'), textarea('mgmt', 'Trade management'), textarea('notes', 'Trade notes'), { k: 'shot', l: 'Execution screenshot', t: 'image' },
+  ]
+  const head = t => <><b>{t.date}</b><span>{t.inst}</span><b className={cls(N(t.pnl))}>{money(N(t.pnl))}</b><span className={'tag ' + t.result}>{t.result}</span><span className="lbl" style={{ margin: 0 }}>{t.model} · {t.protocol} · {t.rating ? t.rating + '/10' : 'unrated'}</span></>
+  head.skip = ['date', 'inst', 'pnl', 'result', 'model', 'protocol', 'rating']
+  return <Section title="Trading Journal" label="Log trade" wide items={db.trades} fields={fields} lists={db} head={head}
+    blank={{ date: today(), inst: 'MNQ', protocol: 'LRLRC', result: 'Win', model: db.models[0] || '', plan: '' }} {...crud('trades')} />
+}
+function Reflections({ db, crud }) {
+  const [p, setP] = useState('All')
+  const P = ['Daily', 'Weekly', 'Monthly', 'Quarterly']
+  const fields = [{ k: 'period', l: 'Period', t: 'select', o: P }, { k: 'date', l: 'Date', t: 'date' }, { k: 'rating', l: 'Rating (1-10)', t: 'number', min: 1, max: 10 }, { k: 'title', l: 'Title' }, textarea('text', 'Reflection', 5), textarea('well', 'What went well'), textarea('lessons', 'Lessons learned'), textarea('improve', 'Areas for improvement')]
+  const head = r => <><b>{r.title || 'Untitled'}</b><span className="tag">{r.period}</span><span className="lbl" style={{ margin: 0 }}>{r.date} · {r.rating || '–'}/10</span></>
+  head.skip = ['title', 'period', 'date', 'rating']
+  const top = <>
+    <div className="stats" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>{P.map(k => { const r = db.reflections.filter(x => x.period === k && x.rating); return <div className="card stat" key={k}><small>{k}</small><b>{db.reflections.filter(x => x.period === k).length}</b><small style={{ margin: '4px 0 0' }}>avg rating {r.length ? (sum(r.map(x => N(x.rating))) / r.length).toFixed(1) : '—'}</small></div> })}</div>
+    <div className="chips">{['All', ...P].map(k => <button key={k} className={'chip ' + (p === k ? 'on' : '')} onClick={() => setP(k)}>{k}</button>)}</div></>
+  return <Section title="Reflections" label="New reflection" items={db.reflections} fields={fields} lists={db} top={top} filter={r => p === 'All' || r.period === p} blank={{ period: 'Daily', date: today() }} head={head} {...crud('reflections')} />
+}
+function Study({ db, crud }) {
+  const [f, setF] = useState('All')
+  const T = ['Daily', 'Weekly', 'Monthly', 'Asia', 'London', 'NYAM', 'NY Lunch', 'NYPM']
+  const fields = [{ k: 'date', l: 'Date', t: 'date' }, { k: 'type', l: 'Session / type', t: 'select', o: T }, { k: 'title', l: 'Title' }, textarea('desc', 'Description', 12), { k: 'shot', l: 'Chart screenshot', t: 'image' }]
+  const head = s => <><b>{s.title || 'Untitled'}</b><span className="tag">{s.type}</span><span className="lbl" style={{ margin: 0 }}>{s.date}</span></>
+  head.skip = ['title', 'type', 'date']
+  const top = <div className="chips">{['All', ...T].map(k => <button key={k} className={'chip ' + (f === k ? 'on' : '')} onClick={() => setF(k)}>{k}</button>)}</div>
+  return <Section title="Study" label="New study" wide items={db.study} fields={fields} lists={db} top={top} filter={s => f === 'All' || s.type === f} blank={{ date: today(), type: 'Daily' }} head={head} {...crud('study')} />
+}
+function Goals({ db, crud, setDb }) {
+  const [per, setPer] = useState('All'), [st, setSt] = useState('Active')
+  const P = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annual']
+  const fields = [{ k: 'title', l: 'Title' }, { k: 'period', l: 'Period', t: 'select', o: P }, { k: 'target', l: 'Target date', t: 'date' }, textarea('desc', 'Description'), textarea('metrics', 'Success metrics'), textarea('itemsText', 'Checklist (one item per line)'), { k: 'progress', l: 'Manual progress % (used without a checklist)', t: 'number', min: 0, max: 100 }]
+  const pct = g => (g.items?.length ? Math.round((g.items.filter(i => i.done).length / g.items.length) * 100) : N(g.progress))
+  const patch = (id, fn) => setDb(d => ({ ...d, goals: d.goals.map(g => (g.id === id ? fn(g) : g)) }))
+  const head = g => <><input type="checkbox" title="Mark complete" checked={!!g.done} onClick={e => e.stopPropagation()} onChange={e => patch(g.id, x => ({ ...x, done: e.target.checked }))} /><b>{g.title}</b><span className="tag">{g.period}</span><span className="lbl" style={{ margin: 0 }}>{g.target && 'by ' + g.target}</span><div className="bar" style={{ width: 120 }}><i style={{ width: pct(g) + '%' }} /></div><span>{pct(g)}%</span></>
+  const body = g => <div className="detail">
+    {g.desc && <div><b>Description</b><p>{g.desc}</p></div>}{g.metrics && <div><b>Success metrics</b><p>{g.metrics}</p></div>}
+    {g.items?.map((i, ix) => <label key={ix} style={{ display: 'flex', gap: 8 }}><input type="checkbox" checked={i.done} onChange={e => patch(g.id, x => ({ ...x, items: x.items.map((y, j) => (j === ix ? { ...y, done: e.target.checked } : y)) }))} />{i.t}</label>)}</div>
+  const top = <div className="chips">{['All', ...P].map(k => <button key={k} className={'chip ' + (per === k ? 'on' : '')} onClick={() => setPer(k)}>{k}</button>)}<span style={{ width: 16 }} />{['Active', 'Completed'].map(k => <button key={k} className={'chip ' + (st === k ? 'on' : '')} onClick={() => setSt(k)}>{k}</button>)}</div>
+  const c = crud('goals')
+  const save = v => c.onSave({ ...v, items: v.itemsText.split('\n').map(t => t.trim()).filter(Boolean).map(t => ({ t, done: !!(v.items || []).find(o => o.t === t && o.done) })) })
+  return <Section title="Goals" label="New goal" items={db.goals} fields={fields} lists={db} top={top} head={head} body={body}
+    filter={g => (per === 'All' || g.period === per) && (st === 'Completed' ? g.done : !g.done)}
+    blank={{ period: 'Monthly', progress: 0, itemsText: '' }} prep={g => ({ ...g, itemsText: g.itemsText ?? (g.items || []).map(i => i.t).join('\n') })} onSave={save} onDel={c.onDel} />
+}
+
+/* ---------- System ---------- */
+function ListEditor({ title, list, onChange }) {
+  const [v, setV] = useState('')
+  const add = () => { if (v.trim()) { onChange([...list, v.trim()]); setV('') } }
+  return <div className="card" style={{ marginBottom: 12 }}><h2>{title}</h2>
+    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}><input value={v} placeholder="Add new…" onChange={e => setV(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} /><button className="btn" onClick={add}>Add</button></div>
+    {list.map((x, i) => <div key={i} className="row" style={{ cursor: 'default', padding: '6px 0' }}><span className="sp">{x}</span><button className="icon" onClick={() => onChange(list.filter((_, j) => j !== i))}><X size={14} /></button></div>)}</div>
+}
+function System({ db, setDb }) {
+  const [msg, setMsg] = useState('')
+  const exp = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' })); a.download = `trading-journal-${today()}.json`; a.click() }
+  const imp = async e => { try { const j = JSON.parse(await e.target.files[0].text()); setDb({ ...DEF, ...j }); setMsg('Backup imported.') } catch { setMsg('That file is not a valid backup.') } e.target.value = '' }
+  return <>
+    <div className="page-h"><h1>System</h1></div>
+    <ListEditor title="Trading models" list={db.models} onChange={x => setDb(d => ({ ...d, models: x }))} />
+    <ListEditor title="Risk management checklist criteria" list={db.risk} onChange={x => setDb(d => ({ ...d, risk: x }))} />
+    <ListEditor title="Trade checklist criteria" list={db.checks} onChange={x => setDb(d => ({ ...d, checks: x }))} />
+    <div className="card"><h2>Backup</h2>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}><button className="btn" onClick={exp}>Export JSON backup</button>
+        <label className="btn" style={{ cursor: 'pointer' }}>Import JSON backup<input type="file" accept="application/json" hidden onChange={imp} /></label><span className="lbl" style={{ margin: 0 }}>{msg}</span></div>
+      <p className="lbl" style={{ marginTop: 14, lineHeight: 1.6 }}>Data safety: everything is stored only in this browser’s localStorage. Clearing site data, using a different browser or device, or private mode will not carry it over. Export a backup regularly, especially before clearing your browser. Screenshots are compressed to save space; browsers allow roughly 5 MB.</p></div>
+  </>
+}
+
+/* ---------- App shell ---------- */
+const TABS = [['Dashboard', LayoutDashboard], ['Pre-Market Plan', Sunrise], ['Trading Journal', BookOpen], ['Reflections', PenLine], ['Study', GraduationCap], ['Goals', Target], ['System', Settings]]
+function App() {
+  const [db, setDb] = useState(() => { try { return { ...DEF, ...JSON.parse(localStorage.getItem(KEY)) } } catch { return DEF } })
+  const [tab, setTab] = useState('Dashboard'), [min, setMin] = useState(false), [zoom, setZoom] = useState(null), [full, setFull] = useState(false)
+  useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(db)); setFull(false) } catch { setFull(true) } }, [db])
+  const crud = key => ({
+    onSave: v => setDb(d => ({ ...d, [key]: v.id ? d[key].map(x => (x.id === v.id ? v : x)) : [...d[key], { ...v, id: uid() }] })),
+    onDel: id => setDb(d => ({ ...d, [key]: d[key].filter(x => x.id !== id) })),
+  })
+  const P = { db, setDb, crud }
+  return <Zoom.Provider value={setZoom}>
+    <div className="app">
+      <nav className={'side ' + (min ? 'min' : '')}>
+        <div className="logo"><i />{!min && 'Trade Journal'}</div>
+        {TABS.map(([n, I]) => <button key={n} title={n} className={'nav ' + (tab === n ? 'on' : '')} onClick={() => setTab(n)}><I size={18} />{!min && n}</button>)}
+        <button className="nav" style={{ marginTop: 'auto' }} onClick={() => setMin(!min)}><PanelLeft size={18} />{!min && 'Collapse'}</button>
+      </nav>
+      <main>
+        {full && <div className="card neg" style={{ marginBottom: 14 }}>Browser storage is full — your latest changes were not saved. Export a backup and remove some screenshots.</div>}
+        {tab === 'Dashboard' && <Dashboard {...P} />}{tab === 'Pre-Market Plan' && <Plans {...P} />}{tab === 'Trading Journal' && <Trades {...P} />}
+        {tab === 'Reflections' && <Reflections {...P} />}{tab === 'Study' && <Study {...P} />}{tab === 'Goals' && <Goals {...P} />}{tab === 'System' && <System {...P} />}
+      </main>
+    </div>
+    {zoom && <div className="lb" onClick={() => setZoom(null)}><img src={zoom} /></div>}
+  </Zoom.Provider>
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+</script></body></html>
