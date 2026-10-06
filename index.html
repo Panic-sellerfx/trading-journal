@@ -68,6 +68,7 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 </head><body><div id="root"></div>
 <script type="text/babel">
@@ -115,24 +116,35 @@ const DEF = {
   plans: [], trades: [], reflections: [], study: [], goals: [],
 }
 const Zoom = createContext(() => {})
+const idb = () => new Promise((res, rej) => { const r = indexedDB.open('tj-images', 1); r.onupgradeneeded = () => r.result.createObjectStore('i'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error) })
+const tx = async (mode, f) => { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction('i', mode), q = f(t.objectStore('i')); t.oncomplete = () => res(q.result); t.onerror = t.onabort = () => rej(t.error) }) }
+const putImg = (id, blob) => tx('readwrite', s => s.put(blob, id))
+const getImg = id => tx('readonly', s => s.get(id))
+// Compress to WebP, store in IndexedDB, return an "idb:" reference (resolves to null if saving fails)
 const readImg = f => new Promise(r => {
-  const fr = new FileReader()
-  fr.onload = () => {
-    const i = new Image()
-    i.onload = () => {
-      const s = Math.min(1, 1400 / i.width), c = document.createElement('canvas')
-      c.width = i.width * s; c.height = i.height * s
-      c.getContext('2d').drawImage(i, 0, 0, c.width, c.height)
-      r(c.toDataURL('image/jpeg', 0.72))
-    }
-    i.src = fr.result
+  const i = new Image()
+  i.onload = () => {
+    const s = Math.min(1, 1600 / i.width), c = document.createElement('canvas')
+    c.width = i.width * s; c.height = i.height * s
+    c.getContext('2d').drawImage(i, 0, 0, c.width, c.height)
+    c.toBlob(async b => { const id = 'idb:' + uid(); try { await putImg(id, b); r(id) } catch { r(null) } }, 'image/webp', 0.7)
   }
-  fr.readAsDataURL(f)
+  i.onerror = () => r(null)
+  i.src = URL.createObjectURL(f)
 })
+const fmt = b => (b > 1e9 ? (b / 1e9).toFixed(2) + ' GB' : (b / 1e6).toFixed(1) + ' MB')
 
 function Img({ src }) {
   const zoom = useContext(Zoom)
-  return src ? <img className="thumb" src={src} onClick={() => zoom(src)} /> : null
+  const [u, setU] = useState(null)
+  useEffect(() => {
+    let url
+    if (!src) { setU(null); return }
+    if (!src.startsWith('idb:')) { setU(src); return }
+    getImg(src).then(b => { if (b) { url = URL.createObjectURL(b); setU(url) } else setU(null) }).catch(() => setU(null))
+    return () => url && URL.revokeObjectURL(url)
+  }, [src])
+  return u ? <img className="thumb" src={u} onClick={() => zoom(u)} /> : null
 }
 const Panel = ({ open, wide, title, onClose, children }) => (
   <aside className={'panel ' + (open ? 'in' : '')} style={{ width: wide ? 1000 : 520 }}>
@@ -143,12 +155,13 @@ const Panel = ({ open, wide, title, onClose, children }) => (
 
 function Form({ fields, init, lists, onSave, onCancel }) {
   const [v, setV] = useState(init)
+  const [err, setErr] = useState('')
   const set = (k, x) => setV(p => ({ ...p, [k]: x }))
   const input = f => {
     const val = v[f.k] ?? ''
     if (f.t === 'textarea') return <textarea rows={f.rows || 4} value={val} onChange={e => set(f.k, e.target.value)} />
     if (f.t === 'select') return <select value={val} onChange={e => set(f.k, e.target.value)}>{f.o.map(opt).map(o => <option key={o.v} value={o.v}>{o.l}</option>)}</select>
-    if (f.t === 'image') return <div><input type="file" accept="image/*" onChange={async e => e.target.files[0] && set(f.k, await readImg(e.target.files[0]))} /><Img src={val} />{val && <button className="ghost" style={{ marginTop: 6 }} onClick={() => set(f.k, '')}>Remove image</button>}</div>
+    if (f.t === 'image') return <div><input type="file" accept="image/*" onChange={async e => { if (!e.target.files[0]) return; const x = await readImg(e.target.files[0]); if (x) { set(f.k, x); setErr('') } else setErr('Could not save the image. Your device storage may be full.') }} />{err && <p className="neg">{err}</p>}<Img src={val} />{val && <button className="ghost" style={{ marginTop: 6 }} onClick={() => set(f.k, '')}>Remove image</button>}</div>
     return <input type={f.t || 'text'} value={val} min={f.min} max={f.max} step={f.step} onChange={e => set(f.k, e.target.value)} />
   }
   return <div>
@@ -352,18 +365,40 @@ function ListEditor({ title, list, onChange }) {
     {list.map((x, i) => <div key={i} className="row" style={{ cursor: 'default', padding: '6px 0' }}><span className="sp">{x}</span><button className="icon" onClick={() => onChange(list.filter((_, j) => j !== i))}><X size={14} /></button></div>)}</div>
 }
 function System({ db, setDb }) {
-  const [msg, setMsg] = useState('')
-  const exp = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' })); a.download = `trading-journal-${today()}.json`; a.click() }
-  const imp = async e => { try { const j = JSON.parse(await e.target.files[0].text()); setDb({ ...DEF, ...j }); setMsg('Backup imported.') } catch { setMsg('That file is not a valid backup.') } e.target.value = '' }
+  const [msg, setMsg] = useState(''), [est, setEst] = useState(null)
+  useEffect(() => { if (navigator.storage?.estimate) navigator.storage.estimate().then(setEst) }, [db, msg])
+  const exp = async () => {
+    const z = new JSZip(), ids = new Set()
+    z.file('data.json', JSON.stringify(db, (k, v) => { if (typeof v === 'string' && v.startsWith('idb:')) ids.add(v); return v }))
+    for (const id of ids) { const b = await getImg(id); if (b) z.file('images/' + id.slice(4) + '.webp', b) }
+    const blob = await z.generateAsync({ type: 'blob', compression: 'STORE' }, m => setMsg('Packing ' + m.percent.toFixed(0) + '%'))
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `trading-journal-backup-${today()}.zip`; a.click(); setMsg('Backup saved to your Downloads folder.')
+  }
+  const imp = async e => {
+    const f = e.target.files[0]
+    try {
+      let j
+      if (f.name.endsWith('.zip')) {
+        const z = await JSZip.loadAsync(f)
+        j = JSON.parse(await z.file('data.json').async('string'))
+        for (const n of Object.keys(z.files)) if (n.startsWith('images/') && !z.files[n].dir) await putImg('idb:' + n.slice(7).replace(/\.webp$/, ''), new Blob([await z.files[n].async('arraybuffer')], { type: 'image/webp' }))
+      } else j = JSON.parse(await f.text())
+      setDb({ ...DEF, ...j }); setMsg('Backup imported.')
+    } catch { setMsg('That file is not a valid backup.') }
+    e.target.value = ''
+  }
   return <>
     <div className="page-h"><h1>System</h1></div>
     <ListEditor title="Trading models" list={db.models} onChange={x => setDb(d => ({ ...d, models: x }))} />
     <ListEditor title="Risk management checklist criteria" list={db.risk} onChange={x => setDb(d => ({ ...d, risk: x }))} />
     <ListEditor title="Trade checklist criteria" list={db.checks} onChange={x => setDb(d => ({ ...d, checks: x }))} />
+    <div className="card" style={{ marginBottom: 12 }}><h2>Storage</h2>
+      {est ? <><div className="bar"><i style={{ width: Math.max(1, (est.usage / est.quota) * 100) + '%' }} /></div><p className="lbl" style={{ marginTop: 8 }}>Using {fmt(est.usage)} of about {fmt(est.quota)} available to this browser. Screenshots are saved on this computer, not online.</p></> : <p className="lbl">Storage details are not available in this browser.</p>}
+    </div>
     <div className="card"><h2>Backup</h2>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}><button className="btn" onClick={exp}>Export JSON backup</button>
-        <label className="btn" style={{ cursor: 'pointer' }}>Import JSON backup<input type="file" accept="application/json" hidden onChange={imp} /></label><span className="lbl" style={{ margin: 0 }}>{msg}</span></div>
-      <p className="lbl" style={{ marginTop: 14, lineHeight: 1.6 }}>Data safety: everything is stored only in this browser’s localStorage. Clearing site data, using a different browser or device, or private mode will not carry it over. Export a backup regularly, especially before clearing your browser. Screenshots are compressed to save space; browsers allow roughly 5 MB.</p></div>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}><button className="btn" onClick={exp}>Export backup (.zip with screenshots)</button>
+        <label className="btn" style={{ cursor: 'pointer' }}>Import backup (.zip or .json)<input type="file" accept=".zip,application/json" hidden onChange={imp} /></label><span className="lbl" style={{ margin: 0 }}>{msg}</span></div>
+      <p className="lbl" style={{ marginTop: 14, lineHeight: 1.6 }}>Data safety: trades and screenshots are stored only in this browser on this computer. Clearing site data, using a different browser, or private mode will not carry them over. Export a backup every week and save the zip to a OneDrive or Google Drive folder for an off-device copy.</p></div>
   </>
 }
 
